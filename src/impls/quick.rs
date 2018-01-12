@@ -12,10 +12,18 @@ macro_rules! gen_quick_sort {
             $fn_name(&mut arr[..center]);
             $fn_name(&mut arr[center + 1 ..]);
         }
+
+        // Generate unit tests for this algorithm
+        #[cfg(test)]
+        mod $fn_name {
+            use super::$fn_name;
+            gen_sort_test_suite!($fn_name);
+        }
     }
 }
 
 gen_quick_sort!(quick_sort_hoare_center, partition_hoare, pivot_center);
+gen_quick_sort!(quick_sort_lomuto_center, partition_lomuto, pivot_center);
 
 // ===========================================================================
 // ===== Pivot choosing algorithms
@@ -76,19 +84,44 @@ fn partition_hoare<T: Ord>(arr: &mut [T], pivot_idx: usize) -> usize {
     r
 }
 
-// pub fn partition_lomuto<T>(arr: &mut [T], pivot: &T)
-// where
-//     T: Ord,
-// {
-//     let mut end_lower = 0;
+fn partition_lomuto<T: Ord>(arr: &mut [T], pivot_idx: usize) -> usize {
+    // Store the pivot at the very beginning)
+    arr.swap(0, pivot_idx);
 
-//     for end_upper in 0..arr.len() {
-//         if &arr[end_upper] <= pivot {
-//             arr.swap(end_lower, end_upper);
-//             end_lower += 1;
-//         }
-//     }
-// }
+    // During partitioning we manage four different sections within the slice:
+    //
+    //     +------------------------------------------------+
+    //     | p |  <= pivot  |  > pivot  |  not checked yet  |
+    //     +------------------------------------------------+
+    //       ^               ^           ^
+    //       0          startUpper    startRest
+    //
+    //
+    // The index `start_upper` refers to the first element of the section that
+    // only contains elements greater than the pivot. The index `start_rest`
+    // refers to the first element in the section of elements we still need
+    // to check.
+    let mut start_upper = 1;
+    for start_rest in 1..arr.len() {
+        // We check the first element of the last section now. If it is greater
+        // than the pivot (and belongs into the third section), we don't need
+        // to do anything: the third section is simply enlarged by one (which
+        // is done by the loop counter).
+        //
+        // If, however, the element is smaller or equal to the pivot, we need
+        // to put it into the second section. To do this, we swap it with
+        // the first element of the third section and enlarge the second
+        // section by one. This is operation runs in O(1).
+        if &arr[start_rest] <= &arr[0] {
+            arr.swap(start_upper, start_rest);
+            start_upper += 1;
+        }
+    }
 
-#[cfg(test)]
-gen_sort_test_suite!(quick_sort_hoare_center);
+    // Now we only need to swap the pivot back into the middle and return its
+    // position.
+    let new_pivot_index = start_upper - 1;
+    arr.swap(0, new_pivot_index);
+
+    new_pivot_index
+}
