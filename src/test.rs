@@ -1,7 +1,7 @@
 use std::panic::{self, UnwindSafe};
 use std::fmt::Debug;
 
-
+/// For internal use. Used by `gen_sort_test_suite`. Don't use directly!
 macro_rules! gen_sort_test {
     ($sorter:ident, $name:ident, $gen:expr) => {
         #[test]
@@ -17,6 +17,31 @@ macro_rules! gen_sort_test {
     }
 }
 
+/// Generates several unit tests for the given sorting algorithm.
+///
+/// You only need to pass the name of the function you want to test. This
+/// sorting function needs the following signature:
+///
+/// ```ignore
+/// fn name<T: Ord>(arr: &mut [T])
+/// ```
+///
+/// The following tests are generated:
+/// - `test_empty`: empty array
+/// - `test_simple_incr`: just counting up values (e.g. `[0, 1, 2, 3]`)
+/// - `test_simple_decr`: just counting down values (e.g. `[3, 2, 1, 0]`)
+/// - `test_zeroes`: an array full of zeroes
+/// - `test_random`: an array filled with random values
+///
+/// All those tests (except `test_empty`) tests arrays of different lengths.
+///
+///
+/// # Example
+///
+/// ```
+/// #[cfg(test)]
+/// gen_sort_test_suite!(quick_sort_hoare_center);
+/// ```
 macro_rules! gen_sort_test_suite {
     ($sorter:ident) => {
         #[test]
@@ -34,13 +59,12 @@ macro_rules! gen_sort_test_suite {
 }
 
 
-
+/// Everything a sorting algorithm can fuck up.
 pub enum TestError<T> {
+    /// The algorithm panicked
     Panic,
-    ChangedLength {
-        before: usize,
-        after: usize,
-    },
+
+    /// The result is not correctly sorted.
     Incorrect {
         original: Vec<T>,
         result: Vec<T>,
@@ -52,13 +76,6 @@ impl<T: Debug> TestError<T> {
         match self {
             TestError::Panic => {
                 panic!("Sorting algorithm panicked!");
-            }
-            TestError::ChangedLength { before, after } => {
-                panic!(
-                    "Sorting algorithm changed the length of the input from {} to {}",
-                    before,
-                    after,
-                );
             }
             TestError::Incorrect { original, result } => {
                 println!("Incorrect sorting result! Original:");
@@ -91,14 +108,6 @@ where
 
     // Use the algorithm from the standard library. We assume it's correct.
     correct.sort();
-
-    // Check for different bugs
-    if result.len() != orig.len() {
-        return Err(TestError::ChangedLength {
-            before: orig.len(),
-            after: result.len(),
-        });
-    }
 
     if correct != result {
         return Err(TestError::Incorrect {
