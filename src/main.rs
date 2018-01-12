@@ -7,17 +7,23 @@ extern crate rand;
 #[cfg(test)]
 #[macro_use]
 mod test;
+
+mod bench;
 mod gen;
 mod impls;
 
+
+use std::time::Duration;
+
+
 fn main() {
-    let mut arr = [9, 3, 6, 1, 4, 2];
-    impls::quick::quick_sort_hoare_center(&mut arr);
-    println!("{:?}", arr);
-    impls::quick::quick_sort_lomuto_center(&mut arr);
+    let meas = bench::run(
+        // impls::quick::quick_sort_hoare_center,
+        |arr| arr.sort(),
+        || gen::random::<u32>(10_000),
+        Duration::from_millis(3_000),
+        50_000,
+    );
+
+    println!("{:#?}", meas.unwrap().analyse());
 }
-
-
-// TODO Next:
-// - add failure
-// - finish testing
