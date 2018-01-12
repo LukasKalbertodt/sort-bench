@@ -55,6 +55,18 @@ macro_rules! gen_sort_test_suite {
         gen_sort_test!($sorter, test_simple_incr, $crate::gen::simple_increasing::<u32>);
         gen_sort_test!($sorter, test_simple_decr, $crate::gen::simple_decreasing::<u32>);
         gen_sort_test!($sorter, test_zeroes, |size| $crate::gen::one_element::<u32>(size, 0));
+
+        quickcheck! {
+            fn test_quickcheck(v: Vec<u32>) -> bool {
+                let mut correct = v.clone();
+                let mut v = v;
+
+                $sorter(&mut v);
+                correct.sort();
+
+                v == correct
+            }
+        }
     }
 }
 
