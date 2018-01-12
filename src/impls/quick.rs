@@ -89,3 +89,6 @@ fn partition_hoare<T: Ord>(arr: &mut [T], pivot_idx: usize) -> usize {
 //         }
 //     }
 // }
+
+#[cfg(test)]
+gen_sort_test_suite!(quick_sort_hoare_center);

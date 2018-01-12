@@ -1,3 +1,9 @@
+extern crate rand;
+
+#[cfg(test)]
+#[macro_use]
+mod test;
+mod gen;
 mod impls;
 
 fn main() {
@@ -5,3 +11,8 @@ fn main() {
     impls::quick::quick_sort_hoare_center(&mut arr);
     println!("{:?}", arr);
 }
+
+
+// TODO Next:
+// - add failure
+// - finish testing
